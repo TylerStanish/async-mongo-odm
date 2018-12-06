@@ -19,6 +19,7 @@ class Registrar(type):
             if isinstance(getattr(cls, var), MongoType):
                 # create the properties on all of the fields recognized as MongoType
                 columns[var] = getattr(cls, var).__class__
+                setattr(cls, var, None)
 
             elif getattr(cls, var).__class__ in list(class_col_mappings.keys()):
                 columns[var] = getattr(cls, var).__class__
