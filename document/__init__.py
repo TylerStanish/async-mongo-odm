@@ -2,12 +2,11 @@ import json
 
 from bson import ObjectId
 
-# from odm.meta import Registrar, class_col_mappings
-import odm.meta
-from odm.type import MongoObject, MongoType
+from odm.meta import Registrar, class_col_mappings
+from odm.type import MongoType
 
 
-class Document(metaclass=odm.meta.Registrar):
+class Document(metaclass=Registrar):
     """
     Create a collection for each Document. Do this so that the end user doesn't have to!
     """
@@ -27,9 +26,9 @@ class Document(metaclass=odm.meta.Registrar):
         """
         d = {}
         for key, val in vars(self).items():
-            if isinstance(odm.meta.class_col_mappings[self.__class__][key], MongoObject):
+            if issubclass(class_col_mappings[self.__class__][key], Document):
                 d[key] = getattr(self, key).as_dict()
-            elif isinstance(odm.meta.class_col_mappings[self.__class__][key], MongoType):
+            elif issubclass(class_col_mappings[self.__class__][key], MongoType):
                 d[key] = getattr(self, key)
         return d
 

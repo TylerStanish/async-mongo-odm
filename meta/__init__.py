@@ -32,7 +32,6 @@ class Registrar(type):
         def __init__(self, **kwargs):
             """
             The new monkey-patched constructor for the subclass that has this metaclass.
-            TODO also should handle nested objects!!!
 
             :param self: The regular 'self' that is given on object instantiation
             :param kwargs: The keyword args that are passed to be populated onto the attributes of 'self'
@@ -49,8 +48,7 @@ class Registrar(type):
                     else:
                         setattr(self, key, val)
                 else:
-                    # otherwise we don't recognize it as a MongoType column so just set it on the object
-                    # TODO or do we want to throw an exception to make this type-safe?
+                    # otherwise we don't recognize it as a MongoType column
                     raise ValueError(f'Incorrect keyword argument "{key}"')
 
         cls.__init__ = __init__
