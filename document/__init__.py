@@ -27,7 +27,7 @@ class Document(metaclass=odm.meta.Registrar):
         """
         d = {}
         for key, val in vars(self).items():
-            if odm.meta.class_col_mappings[self.__class__][key] == MongoObject:
+            if isinstance(odm.meta.class_col_mappings[self.__class__][key], MongoObject):
                 d[key] = getattr(self, key).as_dict()
             elif isinstance(odm.meta.class_col_mappings[self.__class__][key], MongoType):
                 d[key] = getattr(self, key)

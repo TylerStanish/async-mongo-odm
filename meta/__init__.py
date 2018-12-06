@@ -20,9 +20,8 @@ class Registrar(type):
                 # create the properties on all of the fields recognized as MongoType
                 columns[var] = getattr(cls, var).__class__
 
-            elif getattr(cls, var) in list(class_col_mappings.keys()):
-                columns[var] = getattr(cls, var)  # since this is already a class, getting .__class__ would return
-                # the metaclass, i.e. Registrar
+            elif getattr(cls, var).__class__ in list(class_col_mappings.keys()):
+                columns[var] = getattr(cls, var).__class__
 
             elif var == '__collection_name__':
                 print('the collection name is: ' + getattr(cls, var))
