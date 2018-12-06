@@ -6,12 +6,16 @@ Step 2.5: Have getters, setters on the properties that update the _value in each
 
 
 class MongoType:
-    _value = None
-
-
-class String(MongoType):
     pass
 
 
-class Number(MongoType):
+class MongoString(MongoType):
+    pass
+
+
+class MongoNumber(MongoType):
+    pass
+
+
+class MongoObject(MongoType):
     pass
