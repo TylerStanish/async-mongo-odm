@@ -2,6 +2,11 @@ import json
 
 from bson import ObjectId
 
+import odm
+# here we MUST import odm rather than do 'from odm import client' because we must use the most up-to-date
+# version of the odm.client variable since we can call the initialize_asyncio_motor_client function
+
+
 from odm.meta import Registrar, class_col_mappings
 from odm.type import MongoType
 
@@ -63,8 +68,8 @@ class Document(metaclass=Registrar):
     def find_one(cls):
         pass
 
-    def save(self):
-        pass
+    async def save(self):
+        await getattr(getattr(odm.client, odm.db_name), self.__collection_name__).insert_one(self.as_dict())
 
 
 def is_document_instance(cls, var):
