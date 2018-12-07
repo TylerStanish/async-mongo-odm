@@ -1,8 +1,21 @@
 # This represents a dictionary where each key is a class that extends Document.
 # The value is a dictionary where the key is the column name and the value is the type of that column
-from odm.type import MongoType
+from odm.type import MongoType, MongoId
 
 class_col_mappings = {}
+
+
+def id_field_from_class(cls) -> str:
+    """
+
+    :param cls:
+    :return: A str of the field that is the _id document
+    """
+    cols = class_col_mappings[cls]
+    for key, val in cols.items():
+        if val == MongoId:
+            return key
+    raise ValueError('Cannot find _id field on class to persist')
 
 
 class Registrar(type):

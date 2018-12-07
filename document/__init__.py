@@ -7,7 +7,7 @@ import odm
 # version of the odm.client variable since we can call the initialize_asyncio_motor_client function
 
 
-from odm.meta import Registrar, class_col_mappings
+from odm.meta import Registrar, class_col_mappings, id_field_from_class
 from odm.type import MongoType
 
 
@@ -69,7 +69,8 @@ class Document(metaclass=Registrar):
         pass
 
     async def save(self):
-        await getattr(getattr(odm.client, odm.db_name), self.__collection_name__).insert_one(self.as_dict())
+        res = await getattr(getattr(odm.client, odm.db_name), self.__collection_name__).insert_one(self.as_dict())
+        setattr(self, id_field_from_class(self.__class__), str(res.inserted_id))
 
 
 def is_document_instance(cls, var):
