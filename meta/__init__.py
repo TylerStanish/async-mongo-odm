@@ -54,7 +54,7 @@ class Registrar(type):
                     # also, we don't know what the db_name will be UNTIL the user initializes their app with their
                     # event loop/db_name. So we should add this Task onto a list of Tasks that gets executed
                     # when initialize_asyncio_motor_client() is called?
-                    odm._callbacks.append({'collection_name': collection_name, 'field_name': field_name})
+                    odm._unique_indexes_to_create.append({'collection_name': collection_name, 'field_name': field_name})
                 setattr(cls, field_name, None)
 
         def __init__(self, **kwargs):

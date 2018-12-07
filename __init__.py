@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 client = AsyncIOMotorClient(io_loop=asyncio.get_event_loop())
 db_name = None
 
-_callbacks = []
+_unique_indexes_to_create = []
 
 
 async def initialize_asyncio_motor_client(loop, db, host='localhost', port=27017):
@@ -16,6 +16,6 @@ async def initialize_asyncio_motor_client(loop, db, host='localhost', port=27017
     global db_name
     client = AsyncIOMotorClient(host=host, port=port, io_loop=loop)
     db_name = db
-    for info in _callbacks:
+    for info in _unique_indexes_to_create:
         collection = getattr(getattr(client, db_name), info['collection_name'])
         await collection.create_index(info['field_name'], unique=True)
