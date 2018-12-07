@@ -1,5 +1,6 @@
 class MongoType:
-    pass
+    def __init__(self, unique=False):
+        self.unique = unique
 
 
 class MongoId(MongoType):

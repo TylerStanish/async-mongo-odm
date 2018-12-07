@@ -31,9 +31,9 @@ class Document(metaclass=Registrar):
         """
         d = {}
         for key, val in vars(self).items():
-            if issubclass(class_col_mappings[self.__class__][key], Document):
+            if isinstance(class_col_mappings[self.__class__][key], Document):
                 d[key] = getattr(self, key).as_dict()
-            elif issubclass(class_col_mappings[self.__class__][key], MongoType):
+            elif isinstance(class_col_mappings[self.__class__][key], MongoType):
                 d[key] = getattr(self, key)
         return d
 
@@ -69,8 +69,14 @@ class Document(metaclass=Registrar):
         pass
 
     async def save(self):
-        res = await getattr(getattr(odm.client, odm.db_name), self.__collection_name__).insert_one(self.as_dict())
-        setattr(self, id_field_from_class(self.__class__), str(res.inserted_id))
+        id_field = id_field_from_class(self.__class__)
+        # if self has an id, then we don't want to create a new document for it
+        if not getattr(self, id_field):
+            res = await getattr(getattr(odm.client, odm.db_name), self.__collection_name__).insert_one(self.as_dict())
+            setattr(self, id_field, str(res.inserted_id))
+        else:
+            # rather we want to update it
+            pass  # TODO please add code that updates the document
 
 
 def is_document_instance(cls, var):
