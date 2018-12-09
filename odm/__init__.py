@@ -1,5 +1,4 @@
 import asyncio
-import pymongo
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
