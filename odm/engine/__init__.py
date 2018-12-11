@@ -18,7 +18,7 @@ class Engine:
         class Registrar(type):
             def __init__(cls, name, bases, namespace):
                 super().__init__(cls)
-                _init_registrar(self, cls, name, bases, namespace)
+                _init_registrar(self, cls)
 
 
         self.Document = _document_factory(Registrar, self)
