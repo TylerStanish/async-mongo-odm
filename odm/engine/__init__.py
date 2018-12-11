@@ -10,8 +10,8 @@ from odm.type import MongoType
 def _document_factory(Registrar, engine):
     class Document(metaclass=Registrar):
         """
-            Create a collection for each Document. Do this so that the end user doesn't have to!
-            """
+        Create a collection for each Document. Do this so that the end user doesn't have to!
+        """
 
         def __init__(self, **kwargs):
             """
@@ -31,7 +31,7 @@ def _document_factory(Registrar, engine):
                 if isinstance(engine.class_col_mappings[self.__class__][key], Document):
                     d[key] = getattr(self, key).as_dict()
                 elif isinstance(engine.class_col_mappings[self.__class__][key], MongoType):
-                    d[key] = getattr(self, key)
+                    d[key] = str(getattr(self, key))
             return d
 
         def as_json(self):
@@ -136,3 +136,8 @@ class Engine:
 
 
         self.Document = _document_factory(Registrar, self)
+
+    async def save(self, document):
+        doc = await getattr(getattr(self.client, self.db_name), document.__collection_name__)\
+            .insert_one(document.as_dict())
+        return document.__class__.from_dict({**document.as_dict(), '_id': doc.inserted_id})
