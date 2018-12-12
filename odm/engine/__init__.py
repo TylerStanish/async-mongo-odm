@@ -11,8 +11,14 @@ class Engine:
                  loop: asyncio.AbstractEventLoop = None):
         self.client = AsyncIOMotorClient(host=host, port=port, io_loop=loop if loop else asyncio.get_event_loop())
         self.db_name = db_name
-        self.class_col_mappings = {}
-
+        self.class_field_mappings = {}
+        # an entry is as follows:
+        # {
+        #   '<class User>': {
+        #       'name': <MongoString>,
+        #       'age': <MongoNumber>
+        #   }
+        # }
 
         class Registrar(type):
             def __init__(cls, name, bases, namespace):

@@ -26,9 +26,10 @@ def _document_factory(engine, Registrar):
             """
             d = {}
             for key, val in vars(self).items():
-                if isinstance(engine.class_col_mappings[self.__class__][key], Document):
+                field_type = engine.class_field_mappings[self.__class__][key]
+                if isinstance(field_type, Document):
                     d[key] = getattr(self, key).as_dict()
-                elif isinstance(engine.class_col_mappings[self.__class__][key], MongoType):
+                elif isinstance(field_type, MongoType) and field_type.serialize:
                     d[key] = str(getattr(self, key))
             return d
 
