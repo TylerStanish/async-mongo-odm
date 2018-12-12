@@ -2,7 +2,12 @@ import json
 
 from bson import ObjectId
 
-from odm.type import MongoType
+from odm.type import MongoType, MongoObject
+
+
+"""
+I plan on validating new objects and not objects from the DB to ensure backwards-compatibility?
+"""
 
 
 def _document_factory(engine, Registrar):
@@ -27,9 +32,9 @@ def _document_factory(engine, Registrar):
             d = {}
             for key, val in vars(self).items():
                 field_type = engine.class_field_mappings[self.__class__][key]
-                if isinstance(field_type, Document):
+                if isinstance(field_type, MongoObject):
                     d[key] = getattr(self, key).as_dict()
-                elif isinstance(field_type, MongoType) and field_type.serialize:
+                elif isinstance(field_type, MongoType) and field_type._serialize:
                     d[key] = str(getattr(self, key))
             return d
 
