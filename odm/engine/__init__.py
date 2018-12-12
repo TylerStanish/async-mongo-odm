@@ -12,7 +12,6 @@ class Engine:
         self.client = AsyncIOMotorClient(host=host, port=port, io_loop=loop if loop else asyncio.get_event_loop())
         self.db_name = db_name
         self.class_col_mappings = {}
-        self._unique_indexes_to_create = []
 
 
         class Registrar(type):
