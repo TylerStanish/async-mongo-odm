@@ -5,7 +5,7 @@ from bson import ObjectId
 from odm.type import MongoType
 
 
-def _document_factory(Registrar, engine):
+def _document_factory(engine, Registrar):
     class Document(metaclass=Registrar):
         """
         Create a collection for each Document. Do this so that the end user doesn't have to!

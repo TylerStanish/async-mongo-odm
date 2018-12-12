@@ -3,51 +3,51 @@ from odm.type import MongoType
 
 def _init_registrar(engine, registrar_cls):
 
-    columns = {}
+    fields = {}
     collection_name = ''
-    for var in list(vars(registrar_cls).keys()):  # copy .keys() so we don't get RuntimeError: dict changed size in iteration
-        class_var = getattr(registrar_cls, var)
-        if isinstance(class_var, MongoType):
+    for field_name, value in list(vars(registrar_cls).items()):
+        if isinstance(value, MongoType):
             # create the properties on all of the fields recognized as MongoType
-            columns[var] = class_var
+            fields[field_name] = value
 
-        elif class_var.__class__ in list(engine.class_col_mappings.keys()):
-            columns[var] = class_var
+        elif value.__class__ in list(engine.class_col_mappings.keys()):  # meaning an already registered subclass exists
+            fields[field_name] = value
 
-        elif var == '__collection_name__':
-            print('the collection name is: ' + class_var)
-            collection_name = class_var
+        elif field_name == '__collection_name__':
+            print('the collection name is: ' + value)
+            collection_name = value
 
-    engine.class_col_mappings[registrar_cls] = columns
-    if collection_name:
-        for field_name, val in engine.class_col_mappings[registrar_cls].items():
+    # add the fields dict {'JSON key value': 'Type/Class of that key'} for later use/reference
+    engine.class_col_mappings[registrar_cls] = fields
+
+    if collection_name:  # if the user wants to create a collection for this Document
+        for field_name, val in fields.items():
             if hasattr(val, 'unique') and val.unique:
                 collection = getattr(getattr(engine.client, engine.db_name), collection_name)
                 collection.create_index(field_name, unique=True)
 
-            setattr(registrar_cls, field_name, None)  # lastly initialize that field value None
+            setattr(registrar_cls, field_name, getattr(val, 'default'))  # initialize that field to the default set
 
-    def __init__(self1, **kwargs):
+    def __init__(self, **kwargs):
         """
         The new monkey-patched constructor for the subclass that extends from Document and
         thus has the Registrar metaclass.
 
-        :param self1: The regular 'self' that is given on object instantiation
+        :param self: The regular 'self' that is given on object instantiation
         :param kwargs: The keyword args that are passed to be populated onto the attributes of 'self'
-        :return: None
+        :return: An object extending Document
         """
-        for key, val in kwargs.items():
-            if key in columns.keys():
+        for field_name, val in kwargs.items():
+            if field_name in fields.keys():
                 if isinstance(val, dict):
-                    # find the type of this 'key' from the class_col_mappings and then call the
-                    # constructor of that class with the 'val' here
-                    nested_obj = engine.class_col_mappings[self1.__class__][key].__class__(**val)
-                    setattr(self1, key, nested_obj)
-                # set the property to the value provided
+                    # find the type of this 'field_name' from the class_col_mappings and then call the
+                    # constructor of that class with the unpacked 'val' here
+                    nested_obj = engine.class_col_mappings[self.__class__][field_name].__class__(**val)
+                    setattr(self, field_name, nested_obj)
                 else:
-                    setattr(self1, key, val)
+                    setattr(self, field_name, val)
             else:
                 # otherwise we don't recognize it as a MongoType column
-                raise ValueError(f'Incorrect keyword argument "{key}"')
+                raise ValueError(f'Incorrect keyword argument "{field_name}"')
 
     registrar_cls.__init__ = __init__

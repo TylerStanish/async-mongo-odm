@@ -18,10 +18,10 @@ class Engine:
         class Registrar(type):
             def __init__(cls, name, bases, namespace):
                 super().__init__(cls)
-                _init_registrar(self, cls)
+                _init_registrar(engine=self, registrar_cls=cls)
 
 
-        self.Document = _document_factory(Registrar, self)
+        self.Document = _document_factory(engine=self, Registrar=Registrar)
 
     async def save(self, document):
         doc = await getattr(getattr(self.client, self.db_name), document.__collection_name__)\
