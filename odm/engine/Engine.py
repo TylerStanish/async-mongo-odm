@@ -28,7 +28,6 @@ class Engine:
                 super().__init__(cls)
                 _init_registrar(engine=self, registrar_cls=cls)
 
-
         self.Document = _document_factory(engine=self, Registrar=Registrar)
 
     @classmethod

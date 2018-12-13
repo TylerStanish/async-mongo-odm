@@ -1,4 +1,5 @@
 import asyncio
+import time
 import unittest
 from unittest.mock import patch, Mock
 
@@ -7,6 +8,9 @@ from odm.type import MongoId, MongoString, MongoObject, MongoNumber
 from tests.utils import AsyncMock
 
 
+"""
+TODO set the defaults in the constructor, not on the class variables!
+"""
 class Tests(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
@@ -17,6 +21,7 @@ class Tests(unittest.TestCase):
             street = MongoString()
             city = MongoString(default='Something city')
             zip = MongoNumber(nullable=False)
+            country_code = MongoNumber(serialize=False)
 
         class User(self.engine.Document):
             __collection_name__ = 'testing_users'
@@ -24,6 +29,7 @@ class Tests(unittest.TestCase):
             name = MongoString(nullable=False)
             email = MongoString(default='default_email@gmail.com')
             address = Address()
+            age = MongoNumber(serialize=False)
 
 
         self.Address = Address
@@ -47,7 +53,8 @@ class Tests(unittest.TestCase):
             '_id': MongoId(),
             'name': MongoString(nullable=False),
             'email': MongoString(default='default_email@gmail.com'),
-            'address': self.Address()
+            'address': self.Address(),
+            'age': MongoNumber(serialize=False)
         })
 
     def test_type_checks_Document_construction(self):
@@ -68,7 +75,12 @@ class Tests(unittest.TestCase):
 
     @patch('motor.motor_asyncio.AsyncIOMotorCollection.create_index')
     def test_creates_unique_indexes(self, create_index):
-        raise NotImplementedError
+        class Payment(self.engine.Document):
+            __collection_name__ = 'payments'
+            _id = MongoId()
+            unique_field = MongoString(unique=True)
+
+        create_index.assert_called()
 
     def test_default_value_used_Document(self):
         user = self.User(name='Pablo')
@@ -78,14 +90,29 @@ class Tests(unittest.TestCase):
         addr = self.Address.new(street='Something street', zip=12345)
         self.assertEqual(addr.city, 'Something city')
 
-    def test_does_not_serialize_unwanted_fields(self):
+    def test_Document_does_not_serialize_unwanted_fields(self):
+        user = self.User(name='Name', address=self.Address.new(zip=45678), age=43)
+        self.assertFalse('age' in user.as_dict().keys())
+
+    def test_Document_as_dict(self):
+        user = self.User(email='theemail', name='thename')
+        user.address = self.Address.new(zip=57382, country_code=3)
+        res = user.as_dict()
+        self.assertDictEqual(res, {
+            '_id': None,
+            'email': 'theemail',
+            'name': 'thename',
+            'address': {
+                'street': None,
+                'city': 'Something city',
+                'zip': 57382
+            }
+        })
+
+    def test_Document_from_json(self):
+        doc = self.User.from_json('{"name": "world", "age": 38, "address": {"city": "Chicago", "state": "IL"}}')
         raise NotImplementedError
 
-    def test_document_as_dict(self):
-        raise NotImplementedError
-
-    def test_document_from_json(self):
-        raise NotImplementedError
-
-    def test_document_from_dict(self):
+    def test_Document_from_dict(self):
+        self.User.from_dict({'name': ''})
         raise NotImplementedError

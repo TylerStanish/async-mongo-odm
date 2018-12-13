@@ -15,18 +15,7 @@ class MongoObject(MongoType, FieldStoreMixin):
         # preferably do some validation, like check if all nullable=False fields are populated, type checking, etc.
         # TODO type-checking
         obj = cls()
-        for attr, val in cls._get_declared_class_mongo_attrs():
-            arg_val = kwargs.get(attr)
-            if not val._nullable and arg_val is None:
-                raise ValueError(f'Got null argument for {attr} but {attr} is not nullable')
-            if type(arg_val) != val._python_type and not val._default:
-                raise ValueError(f'Got type {type(arg_val)} for {attr} but {attr} must be of type {val._python_type}')
-            # check if the default value is the proper type as well
-            if type(val._default) != val._python_type:
-                raise ValueError(
-                    f'Got type {type(val._default)} for default field {attr} but must be of type {val._python_type}'
-                )
-            setattr(obj, attr, arg_val)
+        cls.validate_and_construct(obj, kwargs)
         return obj
 
     @classmethod
@@ -38,4 +27,10 @@ class MongoObject(MongoType, FieldStoreMixin):
 
         :return: A dict of the declared class fields and their 'self' object values
         """
-        return {key: getattr(self, key) for key, val in self._get_declared_class_mongo_attrs()}
+        d = {}
+
+        for key, val in self._get_declared_class_mongo_attrs():
+            if val._serialize:
+                d[key] = getattr(self, key)
+
+        return d

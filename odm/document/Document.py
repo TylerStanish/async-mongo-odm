@@ -23,7 +23,7 @@ def _document_factory(engine, Registrar):
             even though it is overwritten?
             :param kwargs:
             """
-            pass
+            self.validate_and_construct(self, kwargs)
 
         def as_dict(self):
             """
@@ -31,12 +31,12 @@ def _document_factory(engine, Registrar):
             :return: A dict of the property variables
             """
             d = {}
-            for key, val in vars(self).items():
-                field_type = engine.class_field_mappings[self.__class__][key]
-                if isinstance(field_type, MongoObject):
-                    d[key] = getattr(self, key).as_dict()
-                elif isinstance(field_type, MongoType) and field_type._serialize:
-                    d[key] = str(getattr(self, key))
+            for key, val in self._get_declared_class_mongo_attrs():
+                if val._serialize:
+                    if isinstance(val, MongoObject) and getattr(self, key) is not None:
+                        d[key] = getattr(self, key).as_dict()
+                    else:
+                        d[key] = getattr(self, key)
             return d
 
         def as_json(self):
