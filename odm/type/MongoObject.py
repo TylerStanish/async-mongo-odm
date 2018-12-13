@@ -2,7 +2,6 @@ from odm.meta import FieldStoreMixin
 from .MongoType import MongoType
 
 
-print(type(MongoType), type(FieldStoreMixin))
 class MongoObject(MongoType, FieldStoreMixin):
     """
     Extend this when you know ahead of time what fields the nested object will have
@@ -20,6 +19,13 @@ class MongoObject(MongoType, FieldStoreMixin):
             arg_val = kwargs.get(attr)
             if not val._nullable and arg_val is None:
                 raise ValueError(f'Got null argument for {attr} but {attr} is not nullable')
+            if type(arg_val) != val._python_type and not val._default:
+                raise ValueError(f'Got type {type(arg_val)} for {attr} but {attr} must be of type {val._python_type}')
+            # check if the default value is the proper type as well
+            if type(val._default) != val._python_type:
+                raise ValueError(
+                    f'Got type {type(val._default)} for default field {attr} but must be of type {val._python_type}'
+                )
             setattr(obj, attr, arg_val)
         return obj
 

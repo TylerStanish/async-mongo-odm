@@ -7,10 +7,13 @@ from odm.meta import _init_registrar
 
 
 class Engine:
-    def __init__(self, db_name: str, host: str = 'localhost', port: int = 27017,
-                 loop: asyncio.AbstractEventLoop = None):
-        self.client = AsyncIOMotorClient(host=host, port=port, io_loop=loop if loop else asyncio.get_event_loop())
+
+    def __init__(self, loop, client, db_name: str, host: str = 'localhost', port: int = 27017):
         self.db_name = db_name
+        self.host = host
+        self.port = port
+        self.loop = loop
+        self.client = client
         self.class_field_mappings = {}
         # an entry is as follows:
         # {
@@ -27,6 +30,20 @@ class Engine:
 
 
         self.Document = _document_factory(engine=self, Registrar=Registrar)
+
+    @classmethod
+    def new_asyncio_engine(cls, db_name: str, host: str = 'localhost', port: int = 27017,
+                 loop=None):
+        if not loop:
+            loop = asyncio.get_event_loop()
+        client = AsyncIOMotorClient(host=host, port=port, io_loop=loop)
+        return cls(loop, client, db_name, host, port)
+
+    @classmethod
+    def new_tornado_engine(cls, db_name: str, loop, host: str = 'localhost', port: int = 27017):
+        from motor.motor_tornado import MotorClient
+        client = MotorClient(host=host, port=port, io_loop=loop)
+        return cls(loop, client, db_name, host, port)
 
     async def save(self, document):
         doc = await getattr(getattr(self.client, self.db_name), document.__collection_name__)\
