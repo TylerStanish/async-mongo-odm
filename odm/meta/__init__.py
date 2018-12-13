@@ -1,6 +1,12 @@
 from odm.type import MongoType, MongoString
 
 
+class FieldStoreMixin:
+    @classmethod
+    def _get_declared_class_mongo_attrs(cls):
+        return [(attr, val) for attr, val in vars(cls).items() if isinstance(val, MongoType)]
+
+
 def _init_registrar(engine, registrar_cls):
     fields = {}
     collection_name = ''
@@ -52,13 +58,18 @@ def _init_registrar(engine, registrar_cls):
                     if not isinstance(val, fields[field_name]._python_type):
                         raise TypeError(f'Invalid type for kwarg {field_name}')
 
+                    # None check
+                    if not fields[field_name]._nullable and val is None:
+                        raise TypeError(f'Got None for {field_name} but {field_name} is not nullable')
+
                     setattr(self, field_name, val)
             else:
                 # just set it even though we don't recognize it as a MongoType field
                 setattr(self, field_name, val)
 
+        # final nullability check
         for field_name, contained in fields_covered.items():
             if contained is False and not fields[field_name]._nullable:
-                raise TypeError(f'Got null argument for {field_name} but {field_name} is not nullable')
+                raise TypeError(f'Missing argument for {field_name} but {field_name} is not nullable')
 
     registrar_cls.__init__ = __init__

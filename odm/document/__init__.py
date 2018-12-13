@@ -2,8 +2,9 @@ import json
 
 from bson import ObjectId
 
-from odm.type import MongoType, MongoObject
-
+from odm.meta import FieldStoreMixin
+from odm.type import MongoType
+from odm.type import MongoObject
 
 """
 I plan on validating new objects and not objects from the DB to ensure backwards-compatibility?
@@ -11,7 +12,7 @@ I plan on validating new objects and not objects from the DB to ensure backwards
 
 
 def _document_factory(engine, Registrar):
-    class Document(metaclass=Registrar):
+    class Document(FieldStoreMixin, metaclass=Registrar):
         """
         Create a collection for each Document. Do this so that the end user doesn't have to!
         """
