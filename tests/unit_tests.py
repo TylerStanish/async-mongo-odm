@@ -37,3 +37,11 @@ class Tests(unittest.TestCase):
     def test_class_field_mappings_get_created(self):
         mappings = self.engine.class_field_mappings[self.User]
         self.assertDictEqual(mappings, {'_id': MongoId(), 'name': MongoString()})
+
+    def test_type_checks_object_construction(self):
+        raise NotImplementedError
+
+    def test_type_checks_MongoObject_construction(self):
+        raise NotImplementedError
+
+
