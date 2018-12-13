@@ -1,7 +1,8 @@
 from odm.meta import FieldStoreMixin
-from odm.type.MongoType import MongoType
+from .MongoType import MongoType
 
 
+print(type(MongoType), type(FieldStoreMixin))
 class MongoObject(MongoType, FieldStoreMixin):
     """
     Extend this when you know ahead of time what fields the nested object will have
