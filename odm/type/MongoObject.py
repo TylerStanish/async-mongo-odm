@@ -1,5 +1,5 @@
 from odm.meta import FieldStoreMixin
-from odm.type import MongoType
+from odm.type.MongoType import MongoType
 
 
 class MongoObject(MongoType, FieldStoreMixin):
