@@ -23,7 +23,7 @@ def _document_factory(engine, Registrar):
             even though it is overwritten?
             :param kwargs:
             """
-            self.validate_and_construct(self, kwargs)
+            self.validate_and_construct(self, kwargs, engine=engine)
 
         def as_dict(self):
             """

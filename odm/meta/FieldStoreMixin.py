@@ -1,3 +1,6 @@
+from odm.type import MongoId
+
+
 class FieldStoreMixin:
     """
     This class represents a class that can hold Mongo fields. Currently, Document and MongoObject extend this class
@@ -26,21 +29,19 @@ class FieldStoreMixin:
             if not class_attr_value._nullable and not class_attr_value._default and arg_val is None:
                 raise TypeError(f'Got null argument for {class_attr} but {class_attr} is not nullable')
 
-            if not issubclass(type(arg_val), class_attr_value._python_type) and not class_attr_value._nullable:
+            if not issubclass(type(arg_val), class_attr_value._python_type) and not isinstance(class_attr_value, MongoId):  # and not class_attr_value._nullable:
+                if class_attr_value._nullable and arg_val is None:
+                    if class_attr_value._default:
+                        setattr(obj, class_attr, class_attr_value._default)
+                    else:
+                        setattr(obj, class_attr, None)
+                    continue
+                if isinstance(class_attr_value, MongoObject) and isinstance(arg_val, dict):
+                    setattr(obj, class_attr, class_attr_value.from_dict(arg_val))
+                    continue
                 raise TypeError(
-                    f'Got type {type(arg_val)} for {class_attr} '
-                    f'but {class_attr} must be of type {class_attr_value._python_type}')
-
-            # check if the default value provided is the proper type as well
-            if class_attr_value._default and not (issubclass(type(class_attr_value._default), class_attr_value._python_type)):
-                raise TypeError(
-                    f'Got type {type(class_attr_value._default)} for default field {class_attr} '
-                    f'but must be of type {class_attr_value._python_type}'
-                )
-
-            if isinstance(class_attr_value, MongoObject) and isinstance(arg_val, dict):
-                setattr(obj, class_attr, class_attr_value.__class__.from_dict(arg_val))
-                continue
+                    f'Got type {type(arg_val).__name__} for {class_attr} '
+                    f'but {class_attr} must be of type {class_attr_value._python_type.__name__}')
 
             if class_attr_value._default and arg_val is None:
                 setattr(obj, class_attr, class_attr_value._default)
