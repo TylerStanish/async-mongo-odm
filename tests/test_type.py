@@ -5,7 +5,7 @@ from tests.utils.SetupTemplates import setup_user_and_address_asyncio, setup_use
 
 class TypeTest(unittest.TestCase):
     def setUp(self):
-        setup_user_and_address_tornado(self)
+        setup_user_and_address_asyncio(self)
 
     def test_type_checks_MongoObject_construction(self):
         with self.assertRaises(TypeError):

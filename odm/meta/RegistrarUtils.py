@@ -13,7 +13,6 @@ def _init_registrar(engine, registrar_cls):
             fields[field_name] = value
 
         elif field_name == '__collection_name__':
-            print('the collection name is: ' + value)
             collection_name = value
 
     if collection_name:  # if the user wants to create a collection for this Document

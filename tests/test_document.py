@@ -11,7 +11,7 @@ TODO set the defaults in the constructor, not on the class variables!
 
 class Tests(unittest.TestCase):
     def setUp(self):
-        setup_user_and_address_tornado(self)
+        setup_user_and_address_asyncio(self)
 
     def test_type_checks_Document_construction(self):
         with self.assertRaises(TypeError) as cm:

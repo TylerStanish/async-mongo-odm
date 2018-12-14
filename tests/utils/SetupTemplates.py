@@ -1,5 +1,4 @@
 import asyncio
-import tornado.ioloop
 
 from odm.engine import Engine
 from odm.type import MongoObject, MongoString, MongoNumber, MongoId
@@ -34,6 +33,7 @@ def setup_user_and_address_asyncio(self):
 
 
 def setup_user_and_address_tornado(self):
+    import tornado.ioloop
     self.loop = tornado.ioloop.IOLoop.current()
     self.engine = Engine.new_tornado_engine(db_name='the_db_name', loop=self.loop)
 
