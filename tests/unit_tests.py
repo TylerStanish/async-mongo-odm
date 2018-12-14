@@ -166,3 +166,10 @@ class Tests(unittest.TestCase):
                 'zip': 45923
             }
         })
+
+    def test_Document_resistant_to_class_field_modification(self):
+        self.User.name = MongoNumber()
+        user = self.User(name='hello')
+        # the logic here is that we don't want class field modifications to affect how we check for types.
+        # We know that it is resistant if the above line doesn't throw an error since it accepts str as name even
+        # though we just modified it to a MongoNumber

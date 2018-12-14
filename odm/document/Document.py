@@ -31,7 +31,7 @@ def _document_factory(engine, Registrar):
             :return: A dict of the property variables
             """
             d = {}
-            for key, val in self._get_declared_class_mongo_attrs():
+            for key, val in self._get_declared_class_mongo_attrs(engine):
                 if val._serialize:
                     if isinstance(val, MongoObject) and getattr(self, key) is not None:
                         d[key] = getattr(self, key).as_dict()
