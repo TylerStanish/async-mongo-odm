@@ -2,7 +2,7 @@ import json
 import unittest
 
 from odm.type import MongoNumber, MongoId, MongoString
-from tests.utils.SetupTemplates import setup_user_and_address
+from tests.utils.SetupTemplates import setup_user_and_address_asyncio, setup_user_and_address_tornado
 
 """
 TODO set the defaults in the constructor, not on the class variables!
@@ -11,7 +11,7 @@ TODO set the defaults in the constructor, not on the class variables!
 
 class Tests(unittest.TestCase):
     def setUp(self):
-        setup_user_and_address(self)
+        setup_user_and_address_tornado(self)
 
     def test_type_checks_Document_construction(self):
         with self.assertRaises(TypeError) as cm:

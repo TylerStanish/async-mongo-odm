@@ -1,14 +1,11 @@
 import asyncio
+import tornado.ioloop
 
 from odm.engine import Engine
 from odm.type import MongoObject, MongoString, MongoNumber, MongoId
 
 
-def setup_user_and_address(self):
-    self.loop = asyncio.get_event_loop()
-    self.engine = Engine.new_asyncio_engine('the_db_name', loop=self.loop)
-
-
+def generate_classes(self):
     class Address(MongoObject):
         street = MongoString()
         city = MongoString(default='Something city')
@@ -27,3 +24,17 @@ def setup_user_and_address(self):
 
     self.Address = Address
     self.User = User
+
+
+def setup_user_and_address_asyncio(self):
+    self.loop = asyncio.get_event_loop()
+    self.engine = Engine.new_asyncio_engine('the_db_name', loop=self.loop)
+
+    generate_classes(self)
+
+
+def setup_user_and_address_tornado(self):
+    self.loop = tornado.ioloop.IOLoop.current()
+    self.engine = Engine.new_tornado_engine(db_name='the_db_name', loop=self.loop)
+
+    generate_classes(self)
