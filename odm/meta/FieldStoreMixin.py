@@ -15,23 +15,31 @@ class FieldStoreMixin:
 
     @classmethod
     def validate_and_construct(cls, obj, kwargs):
-        for attr, val in cls._get_declared_class_mongo_attrs():
-            arg_val = kwargs.get(attr)
+        from odm.type import MongoObject
+        for class_attr, class_attr_value in cls._get_declared_class_mongo_attrs():
+            arg_val = kwargs.get(class_attr)
 
-            if not val._nullable and not val._default and arg_val is None:
-                raise TypeError(f'Got null argument for {attr} but {attr} is not nullable')
+            if not class_attr_value._nullable and not class_attr_value._default and arg_val is None:
+                raise TypeError(f'Got null argument for {class_attr} but {class_attr} is not nullable')
 
-            if not issubclass(type(arg_val), val._python_type) and not val._nullable:
-                raise TypeError(f'Got type {type(arg_val)} for {attr} but {attr} must be of type {val._python_type}')
+            if not issubclass(type(arg_val), class_attr_value._python_type) and not class_attr_value._nullable:
+                raise TypeError(
+                    f'Got type {type(arg_val)} for {class_attr} '
+                    f'but {class_attr} must be of type {class_attr_value._python_type}')
 
             # check if the default value provided is the proper type as well
-            if val._default and not (issubclass(type(val._default), val._python_type)):
+            if class_attr_value._default and not (issubclass(type(class_attr_value._default), class_attr_value._python_type)):
                 raise TypeError(
-                    f'Got type {type(val._default)} for default field {attr} but must be of type {val._python_type}'
+                    f'Got type {type(class_attr_value._default)} for default field {class_attr} '
+                    f'but must be of type {class_attr_value._python_type}'
                 )
 
-            if val._default and arg_val is None:
-                setattr(obj, attr, val._default)
+            if isinstance(class_attr_value, MongoObject) and isinstance(arg_val, dict):
+                setattr(obj, class_attr, class_attr_value.__class__.from_dict(arg_val))
+                continue
+
+            if class_attr_value._default and arg_val is None:
+                setattr(obj, class_attr, class_attr_value._default)
             else:
-                setattr(obj, attr, arg_val)
+                setattr(obj, class_attr, arg_val)
 

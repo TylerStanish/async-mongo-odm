@@ -12,8 +12,6 @@ class MongoObject(MongoType, FieldStoreMixin):
 
     @classmethod
     def new(cls, **kwargs):
-        # preferably do some validation, like check if all nullable=False fields are populated, type checking, etc.
-        # TODO type-checking
         obj = cls()
         cls.validate_and_construct(obj, kwargs)
         return obj

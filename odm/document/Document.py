@@ -52,10 +52,9 @@ def _document_factory(engine, Registrar):
             # except TypeError:
             #     pass
             if isinstance(jsn, list):
-                raise ValueError('idk bro. u gave a list when it should just be one object (for now)')
+                raise TypeError('Cannot parse JSON list. You must parse each individual object because this is a class method')
 
-            obj = cls(**jsn)
-            return obj
+            return cls.from_dict(jsn)
 
         @classmethod
         def from_dict(cls, d: dict):

@@ -1,5 +1,5 @@
 import asyncio
-import time
+import json
 import unittest
 from unittest.mock import patch, Mock
 
@@ -11,6 +11,8 @@ from tests.utils import AsyncMock
 """
 TODO set the defaults in the constructor, not on the class variables!
 """
+
+
 class Tests(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
@@ -109,10 +111,58 @@ class Tests(unittest.TestCase):
             }
         })
 
+    def test_Document_from_json_raises_when_missing_not_nullable_field(self):
+        with self.assertRaises(TypeError):
+            self.User.from_json('{"age": 38, "address": {"city": "Chicago", "state": "IL"}}')
+
+    def test_Document_from_dict_raises_when_missing_not_nullable_field(self):
+        with self.assertRaises(TypeError):
+            self.User.from_json({"age": 38, "address": {"city": "Chicago", "state": "IL"}})
+
     def test_Document_from_json(self):
-        doc = self.User.from_json('{"name": "world", "age": 38, "address": {"city": "Chicago", "state": "IL"}}')
-        raise NotImplementedError
+        d = {
+            'name': 'Tina',
+            'email': 'person@bla.com',
+            'age': 38,
+            'address': {
+                'city': 'Chicago',
+                'street': 'Street',
+                'zip': 45923,
+                'country_code': 45
+            }
+        }
+        user = self.User.from_json(json.dumps(d))
+        self.assertDictEqual(user.as_dict(), {
+            '_id': None,
+            'name': 'Tina',
+            'email': 'person@bla.com',
+            'address': {
+                'city': 'Chicago',
+                'street': 'Street',
+                'zip': 45923
+            }
+        })
 
     def test_Document_from_dict(self):
-        self.User.from_dict({'name': ''})
-        raise NotImplementedError
+        d = {
+            'name': 'Tina',
+            'email': 'person@bla.com',
+            'age': 38,
+            'address': {
+                'city': 'Chicago',
+                'street': 'Street',
+                'zip': 45923,
+                'country_code': 45
+            }
+        }
+        user = self.User.from_dict(d)
+        self.assertDictEqual(user.as_dict(), {
+            '_id': None,
+            'name': 'Tina',
+            'email': 'person@bla.com',
+            'address': {
+                'city': 'Chicago',
+                'street': 'Street',
+                'zip': 45923
+            }
+        })
