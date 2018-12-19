@@ -221,7 +221,7 @@ class Tests(unittest.TestCase):
                 },
                 'other_old_value_for_legacy': 42
             })
-            user = await self.User.find_one({})
+            user = await self.User.find_one({'dummy': 'data', 'mocking': 'instead'})
             self.assertDictEqual(user.as_dict(), {
                 '_id': ObjectId('5c1406457aca19811fa07773'),
                 'name': 'Tina',
