@@ -13,15 +13,11 @@ I plan on validating new objects and not objects from the DB to ensure backwards
 
 def _document_factory(engine, Registrar):
     class Document(FieldStoreMixin, metaclass=Registrar):
-        """
-        Create a collection for each Document. Do this so that the end user doesn't have to!
-        """
 
-        def __init__(self, **kwargs):
+        def __init__(self, _strict: bool=True, **kwargs):
             """
-            Having this __init__ method gets rid of the warning we got, but wouldn't it be misleading to have this
-            even though it is overwritten?
-            :param kwargs:
+            :param _strict: Used for internal purposes. Don't mess with this but if you do change it to False if
+            you don't want type-checking when constructing objects
             """
             self.validate_and_construct(self, kwargs, engine=engine)
 
@@ -57,16 +53,23 @@ def _document_factory(engine, Registrar):
             return cls.from_dict(jsn)
 
         @classmethod
-        def from_dict(cls, d: dict):
-            return cls(**d)
+        def from_dict(cls, d: dict, _strict: bool=True):
+            """
+
+            :param d:
+            :param _strict: Used for internal purposes. Don't mess with this but if you do change it to False if
+            you don't want type-checking when constructing objects
+            :return:
+            """
+            return cls(_strict, **d)
 
         @classmethod
-        def from_id(cls, id_str: str):
-            ObjectId(id_str)
-            pass
+        async def from_id(cls, id_str: str):
+            return await cls.find_one({'_id': ObjectId(id_str)})
 
         @classmethod
-        def find_one(cls):
-            pass
+        async def find_one(cls, query):
+            collection = getattr(engine.client[engine.db_name], cls.__collection_name__)
+            return cls.from_dict(await collection.find_one(query), _strict=False)
 
     return Document

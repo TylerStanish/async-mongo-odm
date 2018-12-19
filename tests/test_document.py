@@ -1,7 +1,11 @@
 import json
 import unittest
+from unittest.mock import patch, Mock
+
+from bson import ObjectId
 
 from odm.type import MongoNumber, MongoId, MongoString, MongoObject
+from tests.utils import AsyncMock
 from tests.utils.SetupTemplates import setup_user_and_address_asyncio, setup_user_and_address_tornado
 
 """
@@ -164,3 +168,69 @@ class Tests(unittest.TestCase):
         game = Game()
         self.assertEqual(game.team.name, 'The noobz')
         self.assertEqual(game.team.other_field, None)
+
+    def test_can_add_extra_vars_to_Document_constructor(self):
+        class Rand(self.engine.Document):
+            _id = MongoId()
+
+        rand = Rand(hello='there')
+        self.assertEqual(rand.hello, 'there')
+
+    @patch('motor.motor_asyncio.AsyncIOMotorCollection.find_one')
+    def test_find_one(self, find_one):
+        async def wrapper_test():
+            find_one.return_value = AsyncMock(return_value={
+                '_id': ObjectId('5c1406457aca19811fa07773'),
+                'name': 'Tina',
+                'email': 'person@bla.com',
+                'age': 38,
+                'address': {
+                    'city': 'Chicago',
+                    'street': 'Street',
+                    'zip': 45923,
+                    'country_code': 45
+                }
+            })
+            user = await self.User.find_one({})
+            self.assertDictEqual(user.as_dict(), {
+                '_id': ObjectId('5c1406457aca19811fa07773'),
+                'name': 'Tina',
+                'email': 'person@bla.com',
+                'address': {
+                    'city': 'Chicago',
+                    'street': 'Street',
+                    'zip': 45923,
+                }
+            })
+
+        self.loop.run_until_complete(wrapper_test())
+
+    @patch('motor.motor_asyncio.AsyncIOMotorCollection.find_one')
+    def test_find_one_backward_compatibility(self, find_one):
+        async def wrapper_test():
+            find_one.return_value = AsyncMock(return_value={
+                '_id': ObjectId('5c1406457aca19811fa07773'),
+                'name': 'Tina',
+                'email': 'person@bla.com',
+                'age': 38,
+                'address': {
+                    'city': 'Chicago',
+                    'street': 'Street',
+                    'zip': 45923,
+                    'country_code': 45
+                },
+                'other_old_value_for_legacy': 42
+            })
+            user = await self.User.find_one({})
+            self.assertDictEqual(user.as_dict(), {
+                '_id': ObjectId('5c1406457aca19811fa07773'),
+                'name': 'Tina',
+                'email': 'person@bla.com',
+                'address': {
+                    'city': 'Chicago',
+                    'street': 'Street',
+                    'zip': 45923,
+                }
+            })
+
+        self.loop.run_until_complete(wrapper_test())

@@ -32,6 +32,7 @@ class FieldStoreMixin:
     @classmethod
     def validate_and_construct(cls, obj, kwargs, engine=None):
         from odm.type import MongoObject, MongoId
+        [setattr(obj, attr, val) for attr, val in kwargs.items()]
         for class_attr, class_attr_value in cls._get_declared_class_mongo_attrs(engine):
             arg_val = kwargs.get(class_attr)
 
