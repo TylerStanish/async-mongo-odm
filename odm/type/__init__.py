@@ -1,19 +1,19 @@
-class MongoType:
-    def __init__(self, unique=False):
-        self.unique = unique
+__all__ = [
+    'MongoId',
+    'MongoDict',
+    'MongoType',
+    'MongoObject',
+    'MongoString',
+    'MongoNumber',
+    'MongoDate',
+    'MongoBoolean'
+]
 
-
-class MongoId(MongoType):
-    pass
-
-
-class MongoString(MongoType):
-    pass
-
-
-class MongoNumber(MongoType):
-    pass
-
-
-class MongoObject(MongoType):
-    pass
+from .MongoId import MongoId
+from .MongoDict import MongoDict
+from .MongoType import MongoType
+from .MongoObject import MongoObject
+from .MongoString import MongoString
+from .MongoNumber import MongoNumber
+from .MongoDate import MongoDate
+from .MongoBoolean import MongoBoolean
