@@ -193,7 +193,7 @@ class Tests(unittest.TestCase):
             })
             user = await self.User.find_one({})
             self.assertDictEqual(user.as_dict(), {
-                '_id': ObjectId('5c1406457aca19811fa07773'),
+                '_id': '5c1406457aca19811fa07773',
                 'name': 'Tina',
                 'email': 'person@bla.com',
                 'address': {
@@ -223,7 +223,7 @@ class Tests(unittest.TestCase):
             })
             user = await self.User.find_one({'dummy': 'data', 'mocking': 'instead'})
             self.assertDictEqual(user.as_dict(), {
-                '_id': ObjectId('5c1406457aca19811fa07773'),
+                '_id': '5c1406457aca19811fa07773',
                 'name': 'Tina',
                 'email': 'person@bla.com',
                 'address': {

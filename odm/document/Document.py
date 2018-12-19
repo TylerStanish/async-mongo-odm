@@ -3,7 +3,7 @@ import json
 from bson import ObjectId
 
 from odm.meta import FieldStoreMixin
-from odm.type import MongoType
+from odm.type import MongoType, MongoId
 from odm.type import MongoObject
 
 """
@@ -31,6 +31,8 @@ def _document_factory(engine, Registrar):
                 if val._serialize:
                     if isinstance(val, MongoObject) and getattr(self, key) is not None:
                         d[key] = getattr(self, key).as_dict()
+                    elif isinstance(val, MongoId) and getattr(self, key) is not None:
+                        d[key] = str(getattr(self, key))
                     else:
                         d[key] = getattr(self, key)
             return d

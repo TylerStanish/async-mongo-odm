@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import contextmanager, asynccontextmanager
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -45,7 +46,7 @@ class Engine:
         client = MotorClient(host=host, port=port, io_loop=loop)
         return cls(loop, client, db_name, host, port)
 
-    async def save(self, document, session=None):
+    async def save(self, document, session=None) -> None:
         d = document.as_dict()
         if not document._id:
             d.pop('_id')
@@ -55,3 +56,9 @@ class Engine:
             .insert_one(d, session=session)
         document._id = str(doc.inserted_id)
         # return document.__class__.from_dict({**document.as_dict(), '_id': doc.inserted_id})
+
+    @asynccontextmanager
+    async def start_transaction(self):
+        async with await self.client.start_session() as session:
+            async with session.start_transaction():
+                yield session
