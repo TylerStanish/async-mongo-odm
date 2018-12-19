@@ -26,7 +26,7 @@ class AsyncioEngineTest(unittest.TestCase):
         async def wrapper_test():
             insert_one.return_value = AsyncMock(return_value=Mock(inserted_id='the_id'))
 
-            user = self.User(name='hello person')
+            user = self.User(name='hello person', address=self.Address.new(zip=12345))
             await self.engine.save(user)
             self.assertIsNotNone(user._id)
             self.assertEqual(user._id, 'the_id')

@@ -1,10 +1,11 @@
+from odm.meta.FieldStoreMixin import vars_including_superclasses
 from odm.type import MongoType
 
 
 def _init_registrar(engine, registrar_cls):
     fields = {}
     collection_name = ''
-    for field_name, value in list(vars(registrar_cls).items()):
+    for field_name, value in list(vars_including_superclasses(registrar_cls).items()):
         if isinstance(value, MongoType):
             # create the properties on all of the fields recognized as MongoType
             fields[field_name] = value

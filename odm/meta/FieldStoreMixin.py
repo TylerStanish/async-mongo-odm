@@ -1,4 +1,14 @@
-from odm.type import MongoId
+import inspect
+
+
+def vars_including_superclasses(cls):
+    d = dict()
+    mro_list = list(inspect.getmro(cls))
+    mro_list.reverse()
+    for clazz in mro_list:
+        # will get vars starting with object, and then all of the superclasses until the current cls
+        d = {**d, **vars(clazz)}  # overwrite the dict with the vars in the latest subclass
+    return d
 
 
 class FieldStoreMixin:
@@ -14,15 +24,14 @@ class FieldStoreMixin:
         # which would result in odm.meta.FieldStoreMixin not being registered as a class yet but as a module
         # (since we weren't done importing it yet)
         # But now that we only import it when we use it we allow the import of this meta module to complete
-
         if engine:
             return [(attr, val) for attr, val in engine.class_field_mappings[cls].items()]
 
-        return [(attr, val) for attr, val in vars(cls).items() if isinstance(val, MongoType)]
+        return [(attr, val) for attr, val in vars_including_superclasses(cls).items() if isinstance(val, MongoType)]
 
     @classmethod
     def validate_and_construct(cls, obj, kwargs, engine=None):
-        from odm.type import MongoObject
+        from odm.type import MongoObject, MongoId
         for class_attr, class_attr_value in cls._get_declared_class_mongo_attrs(engine):
             arg_val = kwargs.get(class_attr)
 
@@ -34,7 +43,10 @@ class FieldStoreMixin:
                     if class_attr_value._default:
                         setattr(obj, class_attr, class_attr_value._default)
                     else:
-                        setattr(obj, class_attr, None)
+                        if isinstance(class_attr_value, MongoObject):
+                            setattr(obj, class_attr, class_attr_value.new())
+                        else:
+                            setattr(obj, class_attr, None)
                     continue
                 if isinstance(class_attr_value, MongoObject) and isinstance(arg_val, dict):
                     setattr(obj, class_attr, class_attr_value.from_dict(arg_val))

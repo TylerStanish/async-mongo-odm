@@ -1,8 +1,10 @@
+from abc import ABC
+
 from odm.meta import FieldStoreMixin
 from .MongoType import MongoType
 
 
-class MongoObject(MongoType, FieldStoreMixin):
+class MongoObject(MongoType, FieldStoreMixin, ABC):
     """
     Extend this when you know ahead of time what fields the nested object will have
     """

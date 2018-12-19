@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from odm.type import MongoNumber, MongoId, MongoString
+from odm.type import MongoNumber, MongoId, MongoString, MongoObject
 from tests.utils.SetupTemplates import setup_user_and_address_asyncio, setup_user_and_address_tornado
 
 """
@@ -29,7 +29,7 @@ class Tests(unittest.TestCase):
         self.assertNotIn('for default field', str(cm.exception))
 
     def test_default_value_used_Document(self):
-        user = self.User(name='Pablo')
+        user = self.User(name='Pablo', address=self.Address.new(zip=12345))
         self.assertEqual(user.email, 'default_email@gmail.com')
 
     def test_Document_does_not_serialize_unwanted_fields(self):
@@ -37,8 +37,7 @@ class Tests(unittest.TestCase):
         self.assertFalse('age' in user.as_dict().keys())
 
     def test_Document_as_dict(self):
-        user = self.User(email='theemail', name='thename')
-        user.address = self.Address.new(zip=57382, country_code=3)
+        user = self.User(email='theemail', name='thename', address=self.Address.new(zip=57382, country_code=3))
         res = user.as_dict()
         self.assertDictEqual(res, {
             '_id': None,
@@ -101,6 +100,7 @@ class Tests(unittest.TestCase):
             }
         }
         user = self.User.from_json(json.dumps(d))
+        self.assertEqual(user.age, 38)
         self.assertDictEqual(user.as_dict(), {
             '_id': None,
             'name': 'Tina',
@@ -135,10 +135,32 @@ class Tests(unittest.TestCase):
                 'zip': 45923
             }
         })
+        # above we don't have 'age': 38 because the age field is configured serialize=False on the User document class
 
     def test_Document_resistant_to_class_field_modification(self):
         self.User.name = MongoNumber()
-        user = self.User(name='hello')
+        user = self.User(name='hello', address=self.Address.new(zip=12345))
         # the logic here is that we don't want class field modifications to affect how we check for types.
         # We know that it is resistant if the above line doesn't raise an error since it accepts str as name even
         # though we just modified it to a MongoNumber
+
+    def test_subclassing(self):
+        class AdminUser(self.User):
+            email = MongoString(default='admin@website.com')
+
+        user = AdminUser(name='Pablo', address=self.Address.new(zip=12345))
+        self.assertEqual(user.name, 'Pablo')
+        self.assertEqual(user.email, 'admin@website.com')
+
+    def test_instantiates_MongoObject_with_default_values_rather_than_None(self):
+        class Team(MongoObject):
+            name = MongoString(default='The noobz')
+            other_field = MongoString()
+
+        class Game(self.engine.Document):
+            _id = MongoId()
+            team = Team()
+
+        game = Game()
+        self.assertEqual(game.team.name, 'The noobz')
+        self.assertEqual(game.team.other_field, None)
