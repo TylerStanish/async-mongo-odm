@@ -1,5 +1,5 @@
 import asyncio
-from contextlib import contextmanager, asynccontextmanager
+from contextlib import asynccontextmanager
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -59,6 +59,11 @@ class Engine:
 
     @asynccontextmanager
     async def start_transaction(self):
+        """
+        This context manager is meant for single-transactions only. Do not nest these transactions because it
+        has not been tested
+        :return:
+        """
         async with await self.client.start_session() as session:
             async with session.start_transaction():
                 yield session
