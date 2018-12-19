@@ -1,5 +1,6 @@
 import asyncio
 
+from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from odm.document import _document_factory
@@ -48,7 +49,9 @@ class Engine:
         d = document.as_dict()
         if not document._id:
             d.pop('_id')
+        else:
+            d['_id'] = ObjectId(document._id)
         doc = await getattr(getattr(self.client, self.db_name), document.__collection_name__) \
             .insert_one(d, session=session)
-        document._id = doc.inserted_id
+        document._id = str(doc.inserted_id)
         # return document.__class__.from_dict({**document.as_dict(), '_id': doc.inserted_id})

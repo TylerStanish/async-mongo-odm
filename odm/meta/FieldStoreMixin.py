@@ -39,7 +39,7 @@ class FieldStoreMixin:
             if not class_attr_value._nullable and not class_attr_value._default and arg_val is None:
                 raise TypeError(f'Got null argument for {class_attr} but {class_attr} is not nullable')
 
-            if not issubclass(type(arg_val), class_attr_value._python_type) and not isinstance(class_attr_value, MongoId):  # and not class_attr_value._nullable:
+            if not issubclass(type(arg_val), class_attr_value._python_type):
                 if class_attr_value._nullable and arg_val is None:
                     if class_attr_value._default:
                         setattr(obj, class_attr, class_attr_value._default)
