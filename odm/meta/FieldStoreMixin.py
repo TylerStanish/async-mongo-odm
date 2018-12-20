@@ -2,14 +2,18 @@ import inspect
 
 
 def snake_to_camel(s: str) -> str:
-    items = s.split('_')
-    return items[0] + ''.join(item.title() for item in items)
+    if s == '' or s is None:
+        return ''
+    if s[0] == '_':
+        return s
+    words = s.split('_')
+    return words[0] + ''.join(word.title() for word in words[1:])
 
 
 def camel_to_snake(s: str) -> str:
     res = []
     for char in s:
-        if char.upper() == s:
+        if char.upper() == char:
             res.append('_')
             res.append(char.lower())
         else:
@@ -26,6 +30,14 @@ def vars_including_superclasses(cls):
         # will get vars starting with object, and then all of the superclasses until the current cls
         d = {**d, **vars(clazz)}  # overwrite the dict with the vars in the latest subclass
     return d
+
+
+def find_attr_with_as_serialized_value(serialized_fields: list, as_serialized_val: str):
+    for attr, field in serialized_fields:
+        if field._serialize_as == as_serialized_val:
+            return attr
+        if attr == as_serialized_val:
+            return attr
 
 
 class FieldStoreMixin:
@@ -59,15 +71,12 @@ class FieldStoreMixin:
         return serialized_fields
 
     @classmethod
-    def _get_declared_class_mongo_attrs(cls, engine=None):
+    def _get_declared_class_mongo_attrs(cls):
         from odm.type import MongoType  # moved this import line here to avoid that metaclass conflict because
         # MongoObject.py imports from here (and we import from its __init__ which in turns imports from MongoObject.py)
         # which would result in odm.meta.FieldStoreMixin not being registered as a class yet but as a module
         # (since we weren't done importing it yet)
         # But now that we only import it when we use it we allow the import of this meta module to complete
-
-        # if engine:
-        #     return [(attr, val) for attr, val in engine.class_field_mappings[cls].items()]
 
         return [(attr, val) for attr, val in vars_including_superclasses(cls).items() if isinstance(val, MongoType)]
 
@@ -90,7 +99,7 @@ class FieldStoreMixin:
                 f'{mongo_type_inst._python_type.__name__}'
             )
 
-    def as_dict(self, keys_as_camel_case: bool=True, persisting=False):
+    def as_dict(self, keys_as_camel_case: bool = True, persisting=False):
         """
         Returns a dictionary representation of this object
         :raises TypeError: If the current object does not conform to the constraints declared in an engine.Document
@@ -119,7 +128,7 @@ class FieldStoreMixin:
         kwargs = {}
         for key, val in d.items():
             if key in cls._get_serialized_fields():
-                kwargs[key] = val
+                kwargs[find_attr_with_as_serialized_value(cls._get_declared_class_mongo_attrs(), key)] = val
             else:
                 kwargs[camel_to_snake(key)] = val
         return kwargs
@@ -127,4 +136,3 @@ class FieldStoreMixin:
     @classmethod
     def from_dict(cls, d: dict, _strict=True):
         return cls(**cls._clean_input_dict(d))
-

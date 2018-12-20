@@ -16,14 +16,6 @@ class Engine:
         self.port = port
         self.loop = loop
         self.client = client
-        self.class_field_mappings = {}
-        # an entry is as follows:
-        # {
-        #   '<class User>': {
-        #       'name': <MongoString>,
-        #       'age': <MongoNumber>
-        #   }
-        # }
 
         class Registrar(type):
             def __init__(cls, name, bases, namespace):
