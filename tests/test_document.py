@@ -83,6 +83,12 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(user.the_number, 23)
 
     def test_Document_from_dict_converts_camel_to_snake_on_nondeclared_field(self):
+        """
+        The purpose of this test is to show that if you remove a field from your Model it will still work. It also
+        shows that you can declare assign attributes that are not declared fields and it will still convert to snake
+        case on deserialization ONLY and NOT on serialization (since it the Model is not aware of it). This is mostly
+        meant for backwards-compatibility for the consumer of this library
+        """
         class User(self.engine.Document):
             __collection_name__ = 'users'
             _id = MongoId()

@@ -1,6 +1,8 @@
 import inspect
 from typing import List, Tuple
 
+from bson import ObjectId
+
 from odm.utils.CaseUtils import snake_to_camel, camel_to_snake
 
 
@@ -66,7 +68,7 @@ class FieldStoreMixin:
         :raises TypeError: If the current object does not conform to the constraints declared in an engine.Document
         :return:
         """
-        from odm.type import MongoObject
+        from odm.type import MongoObject, MongoForeignKey
         d = {}
 
         for attr, mongo_type_inst in self._get_declared_class_mongo_attrs():
@@ -81,11 +83,15 @@ class FieldStoreMixin:
                 if mongo_type_inst._serialize_as:
                     if isinstance(curr_val_for_attr, MongoObject):
                         d[mongo_type_inst._serialize_as] = curr_val_for_attr.as_dict()
+                    elif isinstance(mongo_type_inst, MongoForeignKey) and persisting:
+                        d[mongo_type_inst._serialize_as] = ObjectId(curr_val_for_attr)
                     else:
                         d[mongo_type_inst._serialize_as] = curr_val_for_attr
                 elif keys_as_camel_case:
                     if isinstance(curr_val_for_attr, MongoObject):
                         d[snake_to_camel(attr)] = curr_val_for_attr.as_dict()
+                    elif isinstance(mongo_type_inst, MongoForeignKey) and persisting:
+                        d[snake_to_camel(attr)] = ObjectId(curr_val_for_attr)
                     else:
                         d[snake_to_camel(attr)] = curr_val_for_attr
                 else:

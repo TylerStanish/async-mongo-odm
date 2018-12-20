@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock
 from bson import ObjectId
 
 from odm.engine import Engine
-from odm.type import MongoId, MongoString, MongoObject, MongoNumber
+from odm.type import MongoId, MongoString, MongoObject, MongoNumber, MongoForeignKey
 from tests.utils import AsyncMock
 
 
@@ -164,4 +164,40 @@ class TestType(unittest.TestCase):
                 'street': 'Circle street',
                 'houseNumber': 42
             }
+        })
+
+    @patch('motor.motor_asyncio.AsyncIOMotorCollection.insert_one')
+    def test_Document_with_ForeignKey_serializes_as_string_after_saving(self, insert_one):
+        insert_one.return_value = AsyncMock(return_value=Mock(inserted_id=ObjectId('5c19d2fe7aca19816f57b285')))
+
+        async def wrapper_test():
+            class User(self.engine.Document):
+                __collection_name__ = 'users'
+                _id = MongoId()
+                name = MongoString()
+                address = MongoForeignKey()
+
+            user = User(address='5c19ce717aca19800a01af9d')
+            await self.engine.save(user)
+            self.assertEqual(user.as_dict(), {
+                '_id': '5c19d2fe7aca19816f57b285',
+                'name': None,
+                'address': '5c19ce717aca19800a01af9d'
+            })
+
+        asyncio.get_event_loop().run_until_complete(wrapper_test())
+
+    def test_Document_with_ForeignKey_serializes_as_ObjectId_when_persisting(self):
+
+        class User(self.engine.Document):
+            __collection_name__ = 'users'
+            _id = MongoId()
+            name = MongoString(default='Tammy')
+            address = MongoForeignKey()
+
+        user = User(address='5c19ce717aca19800a01af9d')
+        self.assertEqual(user.as_dict(persisting=True), {
+            '_id': None,
+            'name': 'Tammy',
+            'address': ObjectId('5c19ce717aca19800a01af9d')
         })
