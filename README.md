@@ -2,7 +2,7 @@
 
 This is basically a light layer over Motor with an emphasis on easy serialization
 
-## Basic Usage with AsyncIO
+## Basic Usage
 ```python
 import asyncio
 from typing import List
@@ -31,7 +31,8 @@ class User(engine.Document):
 user = User(email='email@random.com', password='some hashed password')
 user.user_friends = ['some user id', 'some other user id']
 
-engine.save(user)
+# assuming you're in an async function
+await engine.save(user)
 
 print(user.as_json())
 """
