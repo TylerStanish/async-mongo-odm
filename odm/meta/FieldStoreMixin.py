@@ -1,4 +1,5 @@
 import inspect
+from typing import List, Tuple
 
 from odm.utils.CaseUtils import snake_to_camel, camel_to_snake
 
@@ -29,12 +30,6 @@ class FieldStoreMixin:
         for attr, value in self._get_declared_class_mongo_attrs():
             if isinstance(getattr(self, attr), MongoType) and not isinstance(getattr(self, attr), MongoObject):
                 setattr(self, attr, None)
-
-    """
-    This class represents a class that can hold Mongo fields. Currently, Document and MongoObject extend this class
-
-    TODO add in as_dict method???
-    """
 
     @classmethod
     def _get_declared_class_mongo_attrs(cls):
@@ -99,9 +94,13 @@ class FieldStoreMixin:
         return d
 
     @classmethod
-    def _get_serialized_fields(cls):
-        serialized_fields = []  # tuple where first value is the attribute of the python field and the second value is
-        # the potential serialized JSON key/attribute
+    def _get_serialized_fields(cls) -> List[Tuple[str, str]]:
+        """
+
+        :return: Tuple where first value is the attribute of the python field and the second value is the
+        potential serialized JSON key/attribute
+        """
+        serialized_fields = []
         for attr, mongo_inst in cls._get_declared_class_mongo_attrs():
             if not mongo_inst._serialize:
                 continue

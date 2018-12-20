@@ -10,6 +10,7 @@ class TestDocument(unittest.TestCase):
 
     def test_Document_as_dict(self):
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId()
             name = MongoString()
 
@@ -21,6 +22,7 @@ class TestDocument(unittest.TestCase):
 
     def test_Document_serialization(self):
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId(serialize=False)
             name = MongoString()
 
@@ -31,6 +33,7 @@ class TestDocument(unittest.TestCase):
 
     def test_Document_as_dict_camel_case(self):
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId(serialize=False)
             first_name = MongoString()
             last_name = MongoString()
@@ -43,6 +46,7 @@ class TestDocument(unittest.TestCase):
 
     def test_Document_serialize_as(self):
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId(serialize=False)
             name = MongoString(serialize_as='theName')
 
@@ -53,6 +57,7 @@ class TestDocument(unittest.TestCase):
 
     def test_Document_from_dict(self):
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId()
             name = MongoString()
 
@@ -61,6 +66,7 @@ class TestDocument(unittest.TestCase):
 
     def test_Document_from_dict_with_serialize_as(self):
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId()
             name = MongoString(serialize_as='theName')
 
@@ -78,6 +84,7 @@ class TestDocument(unittest.TestCase):
 
     def test_Document_from_dict_converts_camel_to_snake_on_nondeclared_field(self):
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId()
             name = MongoString()
             the_number = MongoNumber()
@@ -88,6 +95,7 @@ class TestDocument(unittest.TestCase):
 
     def test_Document_from_dict_with_camel_case_dict_key(self):
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId()
             name = MongoString()
             the_number = MongoNumber()

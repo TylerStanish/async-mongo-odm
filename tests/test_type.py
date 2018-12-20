@@ -19,6 +19,7 @@ class TestType(unittest.TestCase):
             house_number = MongoNumber()
 
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId()
             name = MongoString()
             address = Address()
@@ -39,6 +40,7 @@ class TestType(unittest.TestCase):
             house_number = MongoNumber(serialize=False)
 
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId(serialize=False)
             name = MongoString()
             address = Address()
@@ -58,6 +60,7 @@ class TestType(unittest.TestCase):
             house_number = MongoNumber(serialize_as='housenumber')
 
         class User(self.engine.Document):
+            __collection_name__ = 'users'
             _id = MongoId()
             name = MongoString()
             address = Address(serialize_as='theaddress')
@@ -107,3 +110,58 @@ class TestType(unittest.TestCase):
             })
 
         asyncio.get_event_loop().run_until_complete(wrapper_test())
+
+    def test_Document_with_MongoObject_as_dict_with_nullable_False(self):
+        class Address(MongoObject):
+            street = MongoString()
+            house_number = MongoNumber()
+
+        class User(self.engine.Document):
+            __collection_name__ = 'users'
+            _id = MongoId()
+            name = MongoString(nullable=False)
+            address = Address()
+
+        user = User(address=Address.new(street='Circle street', house_number=42))
+        with self.assertRaises(TypeError) as cm:
+            user.as_dict()
+
+        self.assertEqual('Got null argument for name but name is not nullable', str(cm.exception))
+
+    def test_Document_with_MongoObject_as_dict_with_nullable_False_in_nested_MongoObject(self):
+        class Address(MongoObject):
+            street = MongoString(nullable=False)
+            house_number = MongoNumber()
+
+        class User(self.engine.Document):
+            __collection_name__ = 'users'
+            _id = MongoId()
+            name = MongoString()
+            address = Address()
+
+        user = User(name='Tammy', address=Address.new(house_number=42))
+        with self.assertRaises(TypeError) as cm:
+            user.as_dict()
+
+        self.assertEqual('Got null argument for street but street is not nullable', str(cm.exception))
+
+    def test_Document_with_MongoObject_as_dict_with_default_and_nullable_does_not_raise_TypeError(self):
+        class Address(MongoObject):
+            street = MongoString()
+            house_number = MongoNumber()
+
+        class User(self.engine.Document):
+            __collection_name__ = 'users'
+            _id = MongoId()
+            name = MongoString(default='Tammy', nullable=False)
+            address = Address()
+
+        user = User(address=Address.new(street='Circle street', house_number=42))
+        self.assertEqual(user.as_dict(), {
+            '_id': None,
+            'name': 'Tammy',
+            'address': {
+                'street': 'Circle street',
+                'houseNumber': 42
+            }
+        })
