@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock
 from bson import ObjectId
 
 from odm.engine import Engine
-from odm.type import MongoId, MongoString, MongoObject, MongoNumber, MongoForeignKey
+from odm.type import MongoId, MongoString, MongoObject, MongoNumber, MongoForeignKey, MongoList
 from tests.utils import AsyncMock
 
 
@@ -201,3 +201,97 @@ class TestType(unittest.TestCase):
             'name': 'Tammy',
             'address': ObjectId('5c19ce717aca19800a01af9d')
         })
+
+    def test_Document_as_dict_with_list(self):
+        class User(self.engine.Document):
+            __collection_name__ = 'users'
+            _id = MongoId(serialize=False)
+            name = MongoString()
+            favorite_colors = MongoList(containing_type=str)
+
+        user = User(name='Pablo', favorite_colors=['blue', 'orange'])
+        self.assertListEqual(user.favorite_colors, ['blue', 'orange'])
+        self.assertDictEqual(user.as_dict(), {
+            'name': 'Pablo',
+            'favoriteColors': ['blue', 'orange']
+        })
+
+    def test_Document_as_dict_with_list_containing_MongoObjects(self):
+        class Address(MongoObject):
+            street = MongoString()
+            house_number = MongoNumber()
+
+        class User(self.engine.Document):
+            __collection_name__ = 'users'
+            _id = MongoId(serialize=False)
+            name = MongoString()
+            addresses = MongoList(containing_type=Address)
+
+        user = User(name='Pablo', addresses=[
+            Address.new(street='Elm street', house_number=1),
+            Address.new(street='Oak street', house_number=2)
+        ])
+        self.assertDictEqual(user.as_dict(), {
+            'name': 'Pablo',
+            'addresses': [
+                {
+                    'street': 'Elm street',
+                    'houseNumber': 1
+                },
+                {
+                    'street': 'Oak street',
+                    'houseNumber': 2
+                }
+            ]
+        })
+        user1 = User(name='Tammy')
+        user1.addresses = [
+            Address.new(street='Elm street', house_number=1),
+            Address.new(street='Oak street', house_number=2)
+        ]
+        self.assertDictEqual(user1.as_dict(), {
+            'name': 'Tammy',
+            'addresses': [
+                {
+                    'street': 'Elm street',
+                    'houseNumber': 1
+                },
+                {
+                    'street': 'Oak street',
+                    'houseNumber': 2
+                }
+            ]
+        })
+
+    def test_Document_as_dict_with_list_raises_TypeError_when_serializing_wrong_type_in_list(self):
+        with self.assertRaises(TypeError) as cm:
+            class User(self.engine.Document):
+                __collection_name__ = 'users'
+                _id = MongoId(serialize=False)
+                name = MongoString()
+                favorite_colors = MongoList(containing_type=str)
+
+            user = User(name='Pablo', favorite_colors=['green', 'blue', 24])
+            user.as_dict()
+
+        self.assertEqual('Got type int in MongoList declared as having type str', str(cm.exception))
+
+    def test_Document_as_dict_with_list_raises_TypeError_when_serializing_wrong_type_in_list_MongoObject_entry(self):
+        with self.assertRaises(TypeError) as cm:
+            class Address(MongoObject):
+                street = MongoString()
+                house_number = MongoNumber()
+
+            class User(self.engine.Document):
+                __collection_name__ = 'users'
+                _id = MongoId(serialize=False)
+                name = MongoString()
+                addresses = MongoList(containing_type=Address)
+
+            user = User(name='Pablo')
+            user.addresses = [
+                Address.new(street=24, house_number=1)
+            ]
+            user.as_dict()
+
+        self.assertEqual('Got type int for street but street must be of type str', str(cm.exception))

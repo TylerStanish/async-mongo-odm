@@ -61,6 +61,14 @@ class FieldStoreMixin:
                 f'Got type {type(current_value).__name__} for {attr} but {attr} must be of type '
                 f'{mongo_type_inst._python_type.__name__}'
             )
+        from odm.type import MongoList
+        if isinstance(mongo_type_inst, MongoList):
+            for item in current_value:
+                if not isinstance(item, mongo_type_inst._containing_type):
+                    raise TypeError(
+                        f'Got type {type(item).__name__} in MongoList declared as having type '
+                        f'{mongo_type_inst._containing_type.__name__}'
+                    )
 
     def as_dict(self, keys_as_camel_case: bool = True, persisting=False):
         """
@@ -68,7 +76,7 @@ class FieldStoreMixin:
         :raises TypeError: If the current object does not conform to the constraints declared in an engine.Document
         :return:
         """
-        from odm.type import MongoObject, MongoForeignKey
+        from odm.type import MongoObject, MongoForeignKey, MongoList
         d = {}
 
         for attr, mongo_type_inst in self._get_declared_class_mongo_attrs():
@@ -85,6 +93,14 @@ class FieldStoreMixin:
                         d[mongo_type_inst._serialize_as] = curr_val_for_attr.as_dict()
                     elif isinstance(mongo_type_inst, MongoForeignKey) and persisting:
                         d[mongo_type_inst._serialize_as] = ObjectId(curr_val_for_attr)
+                    elif isinstance(mongo_type_inst, MongoList):
+                        l = []
+                        for item in curr_val_for_attr:
+                            if isinstance(item, MongoObject):
+                                l.append(item.as_dict())
+                            else:
+                                l.append(item)
+                        d[mongo_type_inst._serialize_as] = l
                     else:
                         d[mongo_type_inst._serialize_as] = curr_val_for_attr
                 elif keys_as_camel_case:
@@ -92,6 +108,14 @@ class FieldStoreMixin:
                         d[snake_to_camel(attr)] = curr_val_for_attr.as_dict()
                     elif isinstance(mongo_type_inst, MongoForeignKey) and persisting:
                         d[snake_to_camel(attr)] = ObjectId(curr_val_for_attr)
+                    elif isinstance(mongo_type_inst, MongoList):
+                        l = []
+                        for item in curr_val_for_attr:
+                            if isinstance(item, MongoObject):
+                                l.append(item.as_dict())
+                            else:
+                                l.append(item)
+                        d[snake_to_camel(attr)] = l
                     else:
                         d[snake_to_camel(attr)] = curr_val_for_attr
                 else:
