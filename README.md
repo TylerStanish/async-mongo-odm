@@ -21,6 +21,8 @@ loop = tornado.ioloop.IOLoop.current()
 engine = Engine.new_tornado_engine(db_name='my_app', loop=loop)
 
 class User(engine.Document):
+    __collection_name__ = 'users'
+    
     _id = MongoId()
     email = MongoString(unique=True, nullable=False)
     password = MongoString(nullable=False, serialize=False)
@@ -28,6 +30,8 @@ class User(engine.Document):
 
 user = User(email='email@random.com', password='some hashed password')
 user.user_friends = ['some user id', 'some other user id']
+
+engine.save(user)
 
 print(user.as_json())
 """
