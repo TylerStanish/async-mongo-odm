@@ -1,15 +1,16 @@
+import asyncio
 import unittest
 from unittest.mock import patch, Mock
 
-from odm.type import MongoString, MongoId
+from odm.engine import Engine
+from odm.type import MongoString, MongoId, MongoNumber
 from tests.utils import AsyncMock
-from tests.utils.SetupTemplates import setup_user_and_address_asyncio
 
 
 class AsyncioEngineTest(unittest.TestCase):
 
     def setUp(self):
-        setup_user_and_address_asyncio(self)
+        self.engine = Engine.new_asyncio_engine('db_name')
 
     @patch('motor.motor_asyncio.AsyncIOMotorCollection.create_index')
     def test_creates_unique_indexes(self, create_index):
@@ -26,9 +27,13 @@ class AsyncioEngineTest(unittest.TestCase):
         async def wrapper_test():
             insert_one.return_value = AsyncMock(return_value=Mock(inserted_id='the_id'))
 
-            user = self.User(name='hello person', address=self.Address.new(zip=12345))
-            await self.engine.save(user)
-            self.assertIsNotNone(user._id)
-            self.assertEqual(user._id, 'the_id')
+            class Payment(self.engine.Document):
+                __collection_name__ = 'payments'
+                _id = MongoId()
+                amount = MongoNumber()
 
-        self.loop.run_until_complete(wrapper_test())
+            payment = Payment(amount=30)
+            await self.engine.save(payment)
+            self.assertEqual(payment._id, 'the_id')
+
+        asyncio.get_event_loop().run_until_complete(wrapper_test())

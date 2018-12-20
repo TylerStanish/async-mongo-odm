@@ -1,7 +1,7 @@
 import unittest
 
 from odm.engine import Engine
-from odm.type import MongoId, MongoString
+from odm.type import MongoId, MongoString, MongoNumber
 
 
 class TestDocument(unittest.TestCase):
@@ -71,6 +71,26 @@ class TestDocument(unittest.TestCase):
         class User(self.engine.Document):
             _id = MongoId()
             name = MongoString()
+            the_number = MongoNumber()
 
-        user = User.from_dict({'name': 'Pablo', 'randomVal': 123})
+        user = User.from_dict({'name': 'Pablo', 'theNumber': 23})
+        self.assertEqual(user.the_number, 23)
+
+    def test_Document_from_dict_converts_camel_to_snake_on_nondeclared_field(self):
+        class User(self.engine.Document):
+            _id = MongoId()
+            name = MongoString()
+            the_number = MongoNumber()
+
+        user = User.from_dict({'name': 'Pablo', 'randomVal': 123, 'theNumber': 23})
         self.assertEqual(user.random_val, 123)
+        self.assertEqual(user.the_number, 23)
+
+    def test_Document_from_dict_with_camel_case_dict_key(self):
+        class User(self.engine.Document):
+            _id = MongoId()
+            name = MongoString()
+            the_number = MongoNumber()
+
+        user = User.from_dict({'name': 'Pablo', 'the_number': 1})
+        self.assertEqual(user.the_number, 1)

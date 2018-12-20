@@ -1,25 +1,6 @@
 import inspect
 
-
-def snake_to_camel(s: str) -> str:
-    if s == '' or s is None:
-        return ''
-    if s[0] == '_':
-        return s
-    words = s.split('_')
-    return words[0] + ''.join(word.title() for word in words[1:])
-
-
-def camel_to_snake(s: str) -> str:
-    res = []
-    for char in s:
-        if char.upper() == char:
-            res.append('_')
-            res.append(char.lower())
-        else:
-            res.append(char)
-
-    return ''.join(res)
+from odm.utils.CaseUtils import snake_to_camel, camel_to_snake
 
 
 def vars_including_superclasses(cls):
@@ -33,11 +14,9 @@ def vars_including_superclasses(cls):
 
 
 def find_attr_with_as_serialized_value(serialized_fields: list, as_serialized_val: str):
-    for attr, field in serialized_fields:
-        if field._serialize_as == as_serialized_val:
-            return attr
-        if attr == as_serialized_val:
-            return attr
+    for python_attr, potential_serialized_field in serialized_fields:
+        if potential_serialized_field == as_serialized_val:
+            return python_attr
 
 
 class FieldStoreMixin:
@@ -56,19 +35,6 @@ class FieldStoreMixin:
 
     TODO add in as_dict method???
     """
-
-    @classmethod
-    def _get_serialized_fields(cls):
-        serialized_fields = []
-        for attr, mongo_inst in cls._get_declared_class_mongo_attrs():
-            if not mongo_inst._serialize:
-                continue
-            if mongo_inst._serialize_as:
-                serialized_fields.append(mongo_inst._serialize_as)
-            else:
-                serialized_fields.append(snake_to_camel(attr))
-
-        return serialized_fields
 
     @classmethod
     def _get_declared_class_mongo_attrs(cls):
@@ -124,13 +90,32 @@ class FieldStoreMixin:
         return d
 
     @classmethod
+    def _get_serialized_fields(cls):
+        serialized_fields = []  # tuple where first value is the attribute of the python field and the second value is
+        # the potential serialized JSON key/attribute
+        for attr, mongo_inst in cls._get_declared_class_mongo_attrs():
+            if not mongo_inst._serialize:
+                continue
+            if mongo_inst._serialize_as:
+                serialized_fields.append((attr, mongo_inst._serialize_as))
+            serialized_fields.append((attr, snake_to_camel(attr)))
+            serialized_fields.append((attr, attr))
+
+        return serialized_fields
+
+    @classmethod
     def _clean_input_dict(cls, d: dict):
         kwargs = {}
         for key, val in d.items():
-            if key in cls._get_serialized_fields():
-                kwargs[find_attr_with_as_serialized_value(cls._get_declared_class_mongo_attrs(), key)] = val
-            else:
+            set_kwarg = False
+            for py_attr, potential_json_key in cls._get_serialized_fields():
+                if key == potential_json_key:
+                    kwargs[py_attr] = val
+                    set_kwarg = True
+                    break
+            if not set_kwarg:
                 kwargs[camel_to_snake(key)] = val
+
         return kwargs
 
     @classmethod
