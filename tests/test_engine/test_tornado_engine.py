@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch, Mock
 
+from bson import ObjectId
+
 from odm.engine import Engine
 from odm.type import MongoString, MongoId, MongoNumber
 from tests.utils import AsyncMock
@@ -26,7 +28,7 @@ class TornadoEngineTest(unittest.TestCase):
     @patch('motor.motor_tornado.MotorCollection.insert_one')
     def test_sets_id_on_saved_object(self, insert_one):
         async def wrapper_test():
-            insert_one.return_value = AsyncMock(return_value=Mock(inserted_id='the_id'))
+            insert_one.return_value = AsyncMock(return_value=Mock(inserted_id=ObjectId('5c19d2fe7aca19816f57b285')))
 
             class Payment(self.engine.Document):
                 __collection_name__ = 'payments'
@@ -35,6 +37,6 @@ class TornadoEngineTest(unittest.TestCase):
 
             payment = Payment(amount=30)
             await self.engine.save(payment)
-            self.assertEqual(payment._id, 'the_id')
+            self.assertEqual(payment._id, '5c19d2fe7aca19816f57b285')
 
         self.loop.run_sync(wrapper_test)

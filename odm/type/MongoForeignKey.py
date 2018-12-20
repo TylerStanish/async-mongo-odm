@@ -4,4 +4,4 @@ from .MongoType import MongoType
 
 
 class MongoForeignKey(MongoType):
-    _python_type = ObjectId
+    _python_type = str

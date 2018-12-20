@@ -39,7 +39,7 @@ class Engine:
         return cls(loop, client, db_name, host, port)
 
     async def save(self, document, session=None) -> None:
-        d = document.as_dict()
+        d = document.as_dict(persisting=True)
         if not document._id:
             d.pop('_id')
         else:

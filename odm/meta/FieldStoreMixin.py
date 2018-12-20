@@ -77,7 +77,7 @@ class FieldStoreMixin:
         for attr, mongo_type_inst in self._get_declared_class_mongo_attrs():
             if mongo_type_inst._serialize or persisting:
                 # set default if value is None and we are persisting, and of course only if there is a _default
-                if persisting and mongo_type_inst._default and getattr(self, attr) is None:
+                if mongo_type_inst._default and getattr(self, attr) is None:
                     setattr(self, attr, mongo_type_inst._default)
                 self.validate(attr)
 
