@@ -14,7 +14,9 @@ class MongoObject(MongoType, FieldStoreMixin, ABC):
 
     @classmethod
     def new(cls, **kwargs):
-        return FieldStoreMixin.__init__(**kwargs)
+        obj = cls()
+        FieldStoreMixin.__init__(obj, **kwargs)
+        return obj
 
     @classmethod
     def from_dict(cls, d: dict, _strict=True):

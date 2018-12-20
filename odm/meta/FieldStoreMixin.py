@@ -25,9 +25,9 @@ class FieldStoreMixin:
         for key, val in kwargs.items():
             setattr(self, key, val)
 
-        from odm.type import MongoType
+        from odm.type import MongoType, MongoObject
         for attr, value in self._get_declared_class_mongo_attrs():
-            if isinstance(getattr(self, attr), MongoType):
+            if isinstance(getattr(self, attr), MongoType) and not isinstance(getattr(self, attr), MongoObject):
                 setattr(self, attr, None)
 
     """
@@ -61,7 +61,7 @@ class FieldStoreMixin:
             raise TypeError(f'Got null argument for {attr} but {attr} is not nullable')
         if not issubclass(type(current_value), mongo_type_inst._python_type):
             raise TypeError(
-                f'Got type {type(current_value)} for {attr} but {attr} must be of tpye '
+                f'Got type {type(current_value).__name__} for {attr} but {attr} must be of type '
                 f'{mongo_type_inst._python_type.__name__}'
             )
 
@@ -71,6 +71,7 @@ class FieldStoreMixin:
         :raises TypeError: If the current object does not conform to the constraints declared in an engine.Document
         :return:
         """
+        from odm.type import MongoObject
         d = {}
 
         for attr, mongo_type_inst in self._get_declared_class_mongo_attrs():
@@ -80,12 +81,20 @@ class FieldStoreMixin:
                     setattr(self, attr, mongo_type_inst._default)
                 self.validate(attr)
 
+                curr_val_for_attr = getattr(self, attr)
+
                 if mongo_type_inst._serialize_as:
-                    d[mongo_type_inst._serialize_as] = getattr(self, attr)
+                    if isinstance(curr_val_for_attr, MongoObject):
+                        d[mongo_type_inst._serialize_as] = curr_val_for_attr.as_dict()
+                    else:
+                        d[mongo_type_inst._serialize_as] = curr_val_for_attr
                 elif keys_as_camel_case:
-                    d[snake_to_camel(attr)] = getattr(self, attr)
+                    if isinstance(curr_val_for_attr, MongoObject):
+                        d[snake_to_camel(attr)] = curr_val_for_attr.as_dict()
+                    else:
+                        d[snake_to_camel(attr)] = curr_val_for_attr
                 else:
-                    d[attr] = getattr(self, attr)
+                    d[attr] = curr_val_for_attr
 
         return d
 
