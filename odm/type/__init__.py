@@ -6,7 +6,9 @@ __all__ = [
     'MongoString',
     'MongoNumber',
     'MongoDate',
-    'MongoBoolean'
+    'MongoBoolean',
+    'MongoList',
+    'MongoForeignKey'
 ]
 
 from .MongoId import MongoId
@@ -17,3 +19,5 @@ from .MongoString import MongoString
 from .MongoNumber import MongoNumber
 from .MongoDate import MongoDate
 from .MongoBoolean import MongoBoolean
+from .MongoList import MongoList
+from .MongoForeignKey import MongoForeignKey

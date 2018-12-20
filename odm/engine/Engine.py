@@ -16,14 +16,6 @@ class Engine:
         self.port = port
         self.loop = loop
         self.client = client
-        self.class_field_mappings = {}
-        # an entry is as follows:
-        # {
-        #   '<class User>': {
-        #       'name': <MongoString>,
-        #       'age': <MongoNumber>
-        #   }
-        # }
 
         class Registrar(type):
             def __init__(cls, name, bases, namespace):
@@ -47,7 +39,7 @@ class Engine:
         return cls(loop, client, db_name, host, port)
 
     async def save(self, document, session=None) -> None:
-        d = document.as_dict()
+        d = document.as_dict(persisting=True)
         if not document._id:
             d.pop('_id')
         else:
