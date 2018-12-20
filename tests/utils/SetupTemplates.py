@@ -1,7 +1,7 @@
 import asyncio
 
 from odm.engine import Engine
-from odm.type import MongoObject, MongoString, MongoNumber, MongoId
+from odm.type import MongoObject, MongoString, MongoNumber, MongoId, MongoDate
 
 
 def generate_classes(self):
@@ -19,6 +19,7 @@ def generate_classes(self):
         email = MongoString(default='default_email@gmail.com')
         address = Address()
         age = MongoNumber(serialize=False)
+        created_at = MongoDate()
 
 
     self.Address = Address

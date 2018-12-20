@@ -14,23 +14,9 @@ class MongoObject(MongoType, FieldStoreMixin, ABC):
 
     @classmethod
     def new(cls, **kwargs):
-        obj = cls()
-        cls.validate_and_construct(obj, kwargs)
-        return obj
+        return FieldStoreMixin.__init__(**kwargs)
 
     @classmethod
-    def from_dict(cls, d: dict):
-        return cls.new(**d)
-
-    def as_dict(self):
-        """
-
-        :return: A dict of the declared class fields and their 'self' object values
-        """
-        d = {}
-
-        for key, val in self._get_declared_class_mongo_attrs():
-            if val._serialize:
-                d[key] = getattr(self, key)
-
-        return d
+    def from_dict(cls, d: dict, _strict=True):
+        kwargs = cls._clean_input_dict(d)
+        return cls.new(**kwargs)
