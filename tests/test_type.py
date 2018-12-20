@@ -295,3 +295,26 @@ class TestType(unittest.TestCase):
             user.as_dict()
 
         self.assertEqual('Got type int for street but street must be of type str', str(cm.exception))
+
+    def test_Document_as_dict_with_list_raises_TypeError_when_serializing_wrong_MongoObject_type_in_list(self):
+        with self.assertRaises(TypeError) as cm:
+            class Address(MongoObject):
+                street = MongoString()
+                house_number = MongoNumber()
+
+            class Payment(MongoObject):
+                amount = MongoNumber()
+
+            class User(self.engine.Document):
+                __collection_name__ = 'users'
+                _id = MongoId(serialize=False)
+                name = MongoString()
+                addresses = MongoList(containing_type=Address)
+
+            user = User(name='Pablo')
+            user.addresses = [
+                Payment.new(amount=20.0)
+            ]
+            user.as_dict()
+
+        self.assertEqual('Got type Payment in MongoList declared as having type Address', str(cm.exception))
